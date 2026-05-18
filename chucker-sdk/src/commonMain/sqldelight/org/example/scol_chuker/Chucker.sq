@@ -1,0 +1,38 @@
+CREATE TABLE http_transactions (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    method TEXT NOT NULL,
+    url TEXT NOT NULL,
+    requestHeaders TEXT NOT NULL,
+    requestBody TEXT,
+    requestTime INTEGER NOT NULL,
+    statusCode INTEGER NOT NULL,
+    statusMessage TEXT NOT NULL,
+    responseHeaders TEXT NOT NULL,
+    responseBody TEXT,
+    responseTime INTEGER NOT NULL,
+    durationMs INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM http_transactions ORDER BY requestTime DESC;
+
+selectById:
+SELECT * FROM http_transactions WHERE id = ?;
+
+insert:
+INSERT INTO http_transactions(
+    method,
+    url,
+    requestHeaders,
+    requestBody,
+    requestTime,
+    statusCode,
+    statusMessage,
+    responseHeaders,
+    responseBody,
+    responseTime,
+    durationMs
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clearAll:
+DELETE FROM http_transactions;

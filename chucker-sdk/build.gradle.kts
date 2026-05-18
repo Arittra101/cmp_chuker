@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidLibrary)
@@ -7,6 +8,14 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sqldelight)
+    id("maven-publish")  // ✅ here
+}
+
+group = "com.arittra101"
+version = "1.0.0"
+
+val localProps = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
 }
 
 sqldelight {
@@ -27,6 +36,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
+        // ✅ tell KMP what to publish
+        publishLibraryVariants("release")
     }
 
     listOf(
@@ -71,6 +82,20 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+    }
+}
+
+// ✅ publishing block MUST come AFTER kotlin {} block
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Arittra101/cmp_chuker")
+            credentials {
+                username = localProps["github.username"] as String
+                password = localProps["github.token"] as String
+            }
         }
     }
 }

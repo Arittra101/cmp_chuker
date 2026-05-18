@@ -17,9 +17,9 @@ ktor = "3.5.0"
 navigation-compose = "2.9.2"
 kotlinx-serialization = "1.11.0"
 coroutines = "1.11.0"
-kotlin = "2.2.0"
+kotlin = "2.3.20"
 composeMultiplatform = "1.11.0"
-composeCompiler = "2.2.0"
+composeCompiler = "2.3.20"
 sqldelight = "2.1.0"
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

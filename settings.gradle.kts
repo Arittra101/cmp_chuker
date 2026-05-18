@@ -29,4 +29,6 @@ dependencyResolutionManagement {
 }
 
 include(":sample-app")
-include(":chucker-sdk")
+// Library lives in chucker-sdk/ but is addressed as :shared (KMP convention / README).
+include(":shared")
+project(":shared").projectDir = file("chucker-sdk")

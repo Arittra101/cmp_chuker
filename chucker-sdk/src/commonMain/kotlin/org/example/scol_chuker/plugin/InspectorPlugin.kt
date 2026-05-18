@@ -2,6 +2,7 @@ package org.example.scol_chuker.plugin
 
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.statement.bodyAsText
+import io.ktor.util.AttributeKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -10,10 +11,14 @@ import org.example.scol_chuker.data.repository.TransactionRepository
 import org.koin.mp.KoinPlatform
 
 /**
- * Ktor client plugin that intercepts every request/response and saves it to the
- * Chucker SQLDelight database. Install it with:
+ * Ktor client plugin that records requests/responses into the inspector database.
  *
- *   val client = HttpClient { install(InspectorPlugin) }
+ * Prefer [createChuckerHttpClient] in host apps. Manual install:
+ * ```
+ * val client = HttpClient { install(InspectorPlugin) }
+ * ```
+ *
+ * Requires Koin (started via [CmpChucker.init] on Android) before the first request.
  */
 val InspectorPlugin = createClientPlugin("InspectorPlugin") {
 
@@ -21,22 +26,22 @@ val InspectorPlugin = createClientPlugin("InspectorPlugin") {
         KoinPlatform.getKoin().get()
     }
 
-    // Temporarily holds request data until the matching response arrives.
-    var capturedRequest: PartialRequest? = null
-
     onRequest { request, body ->
-        capturedRequest = PartialRequest(
-            method = request.method.value,
-            url = request.url.toString(),
-            headers = request.headers.entries()
-                .joinToString("\n") { (key, values) -> "$key: ${values.joinToString()}" },
-            body = body?.toString(),
-            requestTime = currentTimeMillis(),
+        request.attributes.put(
+            PartialRequestKey,
+            PartialRequest(
+                method = request.method.value,
+                url = request.url.toString(),
+                headers = request.headers.entries()
+                    .joinToString("\n") { (key, values) -> "$key: ${values.joinToString()}" },
+                body = body?.toString(),
+                requestTime = currentTimeMillis(),
+            ),
         )
     }
 
     onResponse { response ->
-        val req = capturedRequest ?: return@onResponse
+        val req = response.call.request.attributes.getOrNull(PartialRequestKey) ?: return@onResponse
         val responseTime = currentTimeMillis()
 
         val transaction = HttpTransaction(
@@ -63,6 +68,8 @@ val InspectorPlugin = createClientPlugin("InspectorPlugin") {
 // ---------------------------------------------------------------------------
 // Internal data holder — never leaves the plugin
 // ---------------------------------------------------------------------------
+
+private val PartialRequestKey = AttributeKey<PartialRequest>("ChuckerPartialRequest")
 
 private data class PartialRequest(
     val method: String,

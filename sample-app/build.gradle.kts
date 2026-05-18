@@ -15,7 +15,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
-    implementation(projects.chuckerSdk)
+    implementation(projects.shared)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.ktor.client.cio)

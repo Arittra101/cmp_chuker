@@ -28,19 +28,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.launch
-import org.example.scol_chuker.plugin.InspectorPlugin
 import org.example.scol_chuker.ui.overlay.CmpChuckerOverlay
 
 class MainActivity : ComponentActivity() {
 
-    // 2️⃣  Install InspectorPlugin on the Ktor client
-    private val httpClient = HttpClient {
-        install(InspectorPlugin)
-    }
+    private val httpClient = createChuckerHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()

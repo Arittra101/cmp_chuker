@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.arittra101"
-version = "1.0.0"
+version = findProperty("libraryVersion")?.toString() ?: "1.0.2"
 
 val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
@@ -74,7 +74,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            implementation(libs.ktor.client.core)
+            api(libs.ktor.client.core)
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
@@ -99,3 +99,27 @@ publishing {
         }
     }
 }
+
+/** Android + KMP metadata only — use when iOS artifacts for this version are already on GitHub. */
+tasks.register("publishAndroid") {
+    group = "publishing"
+    description = "Publish androidRelease + kotlinMultiplatform to GitHub Packages (skips iOS)"
+    dependsOn(
+        "publishKotlinMultiplatformPublicationToGitHubPackagesRepository",
+        "publishAndroidReleasePublicationToGitHubPackagesRepository",
+    )
+}
+
+/*tasks.register("publishIos") {
+    group = "publishing"
+    description = "Publish iOS artifacts to GitHub Packages (skips Android)"
+    dependsOn(
+        "publishKotlinMultiplatformPublicationToGitHubPackagesRepository",
+        "publishIosArm64PublicationToGitHubPackagesRepository",
+        "publishIosSimulatorArm64PublicationToGitHubPackagesRepository",
+    )
+}*/
+
+//    ./gradlew publishAndroidAndroid AAR + KMP metadata
+//    ./gradlew publishIosiOS frameworks + KMP metadata
+//    ./gradlew publishEverything (Android + iOS)

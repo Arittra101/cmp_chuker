@@ -18,7 +18,7 @@ import org.koin.mp.KoinPlatform
  * val client = HttpClient { install(InspectorPlugin) }
  * ```
  *
- * Requires Koin (started via [CmpChucker.init] on Android) before the first request.
+ * Requires Koin (started via [CmpChucker.init] — Android or iOS) before the first request.
  */
 val InspectorPlugin = createClientPlugin("InspectorPlugin") {
 

@@ -7,7 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.sqldelight)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     id("maven-publish")  // ✅ here
 }
 
@@ -18,12 +19,8 @@ val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
 }
 
-sqldelight {
-    databases {
-        create("ChuckerDatabase") {
-            packageName.set("org.example.scolchuker")
-        }
-    }
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -55,15 +52,13 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.cio)
-            implementation(libs.sqldelight.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native)
         }
         commonMain.dependencies {
-            implementation(libs.sqldelight.runtime)
-            implementation(libs.sqldelight.coroutines)
+            implementation(libs.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -84,6 +79,13 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+// Room's compiler runs per target — KMP has no single "ksp" configuration.
+dependencies {
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 
 // ✅ publishing block MUST come AFTER kotlin {} block

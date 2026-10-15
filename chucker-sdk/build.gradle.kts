@@ -24,7 +24,7 @@ room {
 }
 
 android {
-    namespace = "org.example.scol_chuker.chucker_sdk"
+    namespace = "org.getscol.scol_chuker.chucker_sdk"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 }
 
@@ -69,7 +69,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            api(libs.ktor.client.core)
+            implementation(libs.ktor.client.core)
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
@@ -112,7 +112,7 @@ tasks.register("publishAndroid") {
     )
 }
 
-/*tasks.register("publishIos") {
+tasks.register("publishIos") {
     group = "publishing"
     description = "Publish iOS artifacts to GitHub Packages (skips Android)"
     dependsOn(
@@ -120,7 +120,7 @@ tasks.register("publishAndroid") {
         "publishIosArm64PublicationToGitHubPackagesRepository",
         "publishIosSimulatorArm64PublicationToGitHubPackagesRepository",
     )
-}*/
+}
 
 //    ./gradlew publishAndroidAndroid AAR + KMP metadata
 //    ./gradlew publishIosiOS frameworks + KMP metadata

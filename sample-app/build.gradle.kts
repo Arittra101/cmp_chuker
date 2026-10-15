@@ -54,14 +54,14 @@ dependencies {
 }
 
 android {
-    namespace = "org.example.scol_chuker"
+    namespace = "org.getscol.scol_chuker"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
 
     defaultConfig {
-        applicationId = "org.example.scol_chuker"
+        applicationId = "org.getscol.scol_chuker"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

@@ -130,13 +130,13 @@ startKoin {
 ### 3. HTTP client — use the SDK client factory
 
 ```kotlin
-import org.example.scol_chuker.createChuckerHttpClient
+import org.getscol.scol_chuker.createChuckerHttpClient
 
 private val httpClient = createChuckerHttpClient()
 // InspectorPlugin is installed automatically
 ```
 
-Or manually: `HttpClient { install(org.example.scol_chuker.plugin.InspectorPlugin) }`.
+Or manually: `HttpClient { install(org.getscol.scol_chuker.plugin.InspectorPlugin) }`.
 
 **Important:** `CmpChucker.init()` must run before the first request, or Koin will not be ready.
 

@@ -9,11 +9,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    id("maven-publish")  // ✅ here
+    id("maven-publish")
 }
 
-group = "com.arittra101"
-version = findProperty("libraryVersion")?.toString() ?: "1.0.2"
+group = "org.getscol"
+version = findProperty("libraryVersion")?.toString() ?: "1.0.4"
 
 val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
@@ -33,7 +33,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
-        // ✅ tell KMP what to publish
         publishLibraryVariants("release")
     }
 
@@ -125,3 +124,4 @@ tasks.register("publishIos") {
 //    ./gradlew publishAndroidAndroid AAR + KMP metadata
 //    ./gradlew publishIosiOS frameworks + KMP metadata
 //    ./gradlew publishEverything (Android + iOS)
+//    ./gradlew :shared:publishAllPublicationsToGitHubPackagesRepository ~ android + ios + meta data

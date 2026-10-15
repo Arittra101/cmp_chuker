@@ -35,6 +35,8 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)

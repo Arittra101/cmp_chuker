@@ -1,6 +1,7 @@
 package org.getscol.scol_chuker
 
 import androidx.compose.ui.window.ComposeUIViewController
+import org.koin.core.context.startKoin
 import platform.UIKit.UIViewController
 
 /**
@@ -10,6 +11,8 @@ import platform.UIKit.UIViewController
  * before the first request, since `InspectorPlugin` resolves its repository from Koin.
  */
 fun MainViewController(): UIViewController {
+
+    startKoin{  }
     CmpChucker.init()
     return ComposeUIViewController {
         SampleApp()

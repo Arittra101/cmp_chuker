@@ -24,17 +24,6 @@ import androidx.compose.ui.unit.dp
 import org.getscol.scol_chuker.ui.dialog.ChuckerDialog
 import kotlin.math.roundToInt
 
-/**
- * Drop this into your root composable — it adds a draggable floating bug button
- * that opens the Network Inspector dialog.
- *
- *   setContent {
- *       YourTheme {
- *           YourApp()
- *           CmpChuckerOverlay()   // ← add this
- *       }
- *   }
- */
 @Composable
 fun CmpChuckerOverlay() {
     var offsetX by remember { mutableStateOf(0f) }

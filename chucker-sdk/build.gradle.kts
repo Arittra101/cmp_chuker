@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "org.getscol"
-version = findProperty("libraryVersion")?.toString() ?: "1.0.4"
+version = findProperty("libraryVersion")?.toString() ?: "1.0.5"
 
 val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())

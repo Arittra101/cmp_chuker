@@ -1,4 +1,23 @@
-Kotlin Multiplatform project (Android + iOS) — network inspector SDK.
+# SCOL Chucker
+
+Kotlin Multiplatform (Android + iOS) network inspector SDK — a debug surface for developers and
+testers, not for end users.
+
+## What the inspector gives you
+
+- **A floating bug button that reacts to traffic.** Every captured call flashes a ring around it,
+  bumps an unseen counter badge and briefly shows the call itself (`200 GET /todos/1 · 812 ms`) at
+  the top of the screen. The button turns red the moment something fails, so a tester sees a broken
+  call without opening anything. Drag it anywhere; it snaps to the nearest edge.
+- **Search across everything.** The call list filters by url, method, status code **and body
+  contents** — the filtering runs in SQLite, so searching an order id inside a 2 MB response is
+  still instant. Status chips (`2xx` … `5xx`, `fail`) narrow it further.
+- **Bodies as formatted JSON.** Request and response bodies are pretty-printed, syntax-highlighted
+  and line-numbered, and every line wraps — nothing is ever read by scrolling sideways. `pretty` /
+  `raw` toggles per screen, copy buttons on each section.
+- **Requests that never came back are captured too**, with status `FAIL` and the exception message.
+- **Export:** `cURL` tab reproduces any call, and the overview copies a plain-text report for a
+  bug ticket.
 
 ## Modules
 
@@ -71,7 +90,10 @@ To confirm what is already published: GitHub → repo **cmp_chuker** → **Packa
 Transactions are stored with **Room 2.8.5**, one schema for both platforms:
 
 - `data/db/HttpTransaction.kt` — `@Entity(tableName = "http_transactions")`, also the model the UI renders
-- `data/db/ChuckerDao.kt` — `@Dao`; `selectAll()` returns a `Flow`, so the inspector list updates live
+- `data/db/ChuckerDao.kt` — `@Dao`; `search()` returns a `Flow` of a light column projection
+  ([`TransactionSummary`]) filtered in SQL, plus `observeLatest()` for the floating button and the
+  two counters. The list never loads bodies — a single large response would otherwise be copied
+  into memory on every insert
 - `data/db/ChuckerDatabase.kt` — `@Database` + `@ConstructedBy(ChuckerDatabaseConstructor::class)`; Room's KSP processor generates the `actual` object per target
 - `data/db/DatabaseBuilderFactory.*.kt` — the only platform-specific piece: Android resolves `getDatabasePath()`, iOS resolves `NSDocumentDirectory`
 - `di/ChuckerModule.kt` — builds the database with `BundledSQLiteDriver()` (same driver on Android and iOS) and `Dispatchers.IO`
@@ -86,7 +108,7 @@ dependencies {
 }
 ```
 
-Schemas are exported to `chucker-sdk/schemas/` — commit them, and bump `version` in `@Database` whenever the table changes.
+Schemas are exported to `chucker-sdk/schemas/` — commit them, and bump `version` in `@Database` whenever the table changes. (Schema **2** added `requestBodySize` / `responseBodySize`.)
 
 **Upgrading from an SQLDelight build (≤ 1.0.2):** the database file is now `chucker_room.db`, not `chucker.db`. Room would fail its identity check on the old file and crash the host app, so the names are kept apart; the stale `chucker.db` is simply orphaned and can be deleted. The builder also uses `fallbackToDestructiveMigration(dropAllTables = true)` — captured traffic is disposable, so a schema change wipes the inspector rather than blocking the host app.
 
@@ -137,6 +159,15 @@ private val httpClient = createChuckerHttpClient()
 ```
 
 Or manually: `HttpClient { install(org.getscol.scol_chuker.plugin.InspectorPlugin) }`.
+
+The plugin captures from Ktor's `Send` hook, which matters twice over:
+
+- the request body is read **after** serialization, so a `setBody(MyDto(…))` is stored as the JSON
+  that went on the wire — not as `MyDto(a=1, b=2)`;
+- the response is passed on as a *saved* call, so the inspector reading the body cannot steal it
+  from your own `bodyAsText()`.
+
+Binary and oversized (> 2 MB) payloads are noted, not copied.
 
 **Important:** `CmpChucker.init()` must run before the first request, or Koin will not be ready.
 

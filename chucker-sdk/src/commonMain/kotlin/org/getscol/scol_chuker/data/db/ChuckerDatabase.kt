@@ -11,7 +11,7 @@ import androidx.room.RoomDatabaseConstructor
  */
 internal const val CHUCKER_DB_FILE = "chucker_room.db"
 
-@Database(entities = [HttpTransaction::class], version = 1)
+@Database(entities = [HttpTransaction::class], version = 2)
 @ConstructedBy(ChuckerDatabaseConstructor::class)
 internal abstract class ChuckerDatabase : RoomDatabase() {
     abstract fun chuckerDao(): ChuckerDao

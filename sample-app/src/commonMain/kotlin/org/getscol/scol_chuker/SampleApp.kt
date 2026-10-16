@@ -25,10 +25,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.getscol.scol_chuker.ui.overlay.CmpChuckerOverlay
+
+/** Sent as an object — the inspector must show the JSON, never this class's `toString()`. */
+@Serializable
+private data class NewPost(
+    val title: String,
+    val body: String,
+    val userId: Int,
+    val tags: List<String>,
+    val draft: Boolean,
+)
 
 /**
  * The whole sample UI — shared by Android ([MainActivity]) and iOS (`MainViewController`).
@@ -40,7 +58,13 @@ import org.getscol.scol_chuker.ui.overlay.CmpChuckerOverlay
 @Composable
 fun SampleApp() {
     MaterialTheme {
-        val httpClient = remember { createChuckerHttpClient() }
+        val httpClient = remember {
+            createChuckerHttpClient {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
+            }
+        }
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
         var loading by remember { mutableStateOf(false) }
@@ -61,12 +85,12 @@ fun SampleApp() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "Chucker SDK Demo",
+                        text = "SCOL Chucker Demo",
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap a button to fire an HTTP request, then tap 🐛 to inspect it.",
+                        text = "Fire a request — the bug button flashes and counts it. Tap it to inspect.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
@@ -76,11 +100,11 @@ fun SampleApp() {
                     if (loading) {
                         CircularProgressIndicator()
                     } else {
-                        val fire: (String) -> Unit = { url ->
+                        val fire: (suspend () -> Unit) -> Unit = { call ->
                             scope.launch {
                                 loading = true
-                                runCatching { httpClient.get(url).bodyAsText() }
-                                    .onSuccess { snackbar.showSnackbar("✅ 200 OK — check the inspector!") }
+                                runCatching { call() }
+                                    .onSuccess { snackbar.showSnackbar("✅ done — check the inspector") }
                                     .onFailure { snackbar.showSnackbar("❌ ${it.message}") }
                                 loading = false
                             }
@@ -88,13 +112,43 @@ fun SampleApp() {
 
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             SampleButton("GET /todos/1") {
-                                fire("https://jsonplaceholder.typicode.com/todos/1")
+                                fire {
+                                    httpClient.get("https://jsonplaceholder.typicode.com/todos/1")
+                                        .bodyAsText()
+                                }
                             }
-                            SampleButton("GET /posts") {
-                                fire("https://jsonplaceholder.typicode.com/posts")
+                            SampleButton("GET /posts (big JSON)") {
+                                fire {
+                                    httpClient.get("https://jsonplaceholder.typicode.com/posts")
+                                        .bodyAsText()
+                                }
+                            }
+                            SampleButton("POST /posts (object body)") {
+                                fire {
+                                    httpClient.post("https://jsonplaceholder.typicode.com/posts") {
+                                        contentType(ContentType.Application.Json)
+                                        setBody(
+                                            NewPost(
+                                                title = "Captured by SCOL Chucker",
+                                                body = "Ktor serializes this before the inspector sees it.",
+                                                userId = 7,
+                                                tags = listOf("kmp", "ktor", "inspector"),
+                                                draft = false,
+                                            ),
+                                        )
+                                    }.bodyAsText()
+                                }
                             }
                             SampleButton("GET /404 (error)") {
-                                fire("https://jsonplaceholder.typicode.com/nonexistent")
+                                fire {
+                                    httpClient.get("https://jsonplaceholder.typicode.com/nonexistent")
+                                        .bodyAsText()
+                                }
+                            }
+                            SampleButton("GET unreachable host (fail)") {
+                                fire {
+                                    httpClient.get("https://host.invalid/health").bodyAsText()
+                                }
                             }
                         }
                     }

@@ -7,27 +7,24 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.sqldelight)
-    id("maven-publish")  // ✅ here
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+    id("maven-publish")
 }
 
-group = "com.arittra101"
-version = findProperty("libraryVersion")?.toString() ?: "1.0.2"
+group = "org.getscol"
+version = findProperty("libraryVersion")?.toString() ?: "1.0.5"
 
 val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
 }
 
-sqldelight {
-    databases {
-        create("ChuckerDatabase") {
-            packageName.set("org.example.scolchuker")
-        }
-    }
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
-    namespace = "org.example.scol_chuker.chucker_sdk"
+    namespace = "org.getscol.scol_chuker.chucker_sdk"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 }
 
@@ -36,7 +33,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
-        // ✅ tell KMP what to publish
         publishLibraryVariants("release")
     }
 
@@ -55,15 +51,13 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.cio)
-            implementation(libs.sqldelight.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native)
         }
         commonMain.dependencies {
-            implementation(libs.sqldelight.runtime)
-            implementation(libs.sqldelight.coroutines)
+            implementation(libs.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -74,7 +68,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            api(libs.ktor.client.core)
+            implementation(libs.ktor.client.core)
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
@@ -84,6 +78,13 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+// Room's compiler runs per target — KMP has no single "ksp" configuration.
+dependencies {
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 
 // ✅ publishing block MUST come AFTER kotlin {} block
@@ -110,7 +111,7 @@ tasks.register("publishAndroid") {
     )
 }
 
-/*tasks.register("publishIos") {
+tasks.register("publishIos") {
     group = "publishing"
     description = "Publish iOS artifacts to GitHub Packages (skips Android)"
     dependsOn(
@@ -118,8 +119,9 @@ tasks.register("publishAndroid") {
         "publishIosArm64PublicationToGitHubPackagesRepository",
         "publishIosSimulatorArm64PublicationToGitHubPackagesRepository",
     )
-}*/
+}
 
 //    ./gradlew publishAndroidAndroid AAR + KMP metadata
 //    ./gradlew publishIosiOS frameworks + KMP metadata
 //    ./gradlew publishEverything (Android + iOS)
+//    ./gradlew :shared:publishAllPublicationsToGitHubPackagesRepository ~ android + ios + meta data
